@@ -1,5 +1,6 @@
 import boto3
 import json
+import os
 
 def lambda_handler(event, context):
     print event
@@ -9,7 +10,7 @@ def lambda_handler(event, context):
     target_bucket_arn = str(event['Records'][0]['dynamodb']['NewImage']['BucketArn']['S'])
     print target_bucket_arn
     target_bucket_arn = target_bucket_arn + '/*'
-    s3_copy_policy_arn = process.env.POLICY_ARN
+    s3_copy_policy_arn = os.environ['POLICY_ARN']
     iam = boto3.client('iam')
     old_policy = iam.get_policy(PolicyArn = s3_copy_policy_arn)
     old_policy_version = old_policy['Policy']['DefaultVersionId']
