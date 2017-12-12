@@ -1,5 +1,6 @@
 import boto3
 import re
+import os
 from botocore.exceptions import ClientError
 
 print('Loading function')
@@ -14,14 +15,14 @@ def get_folder_name(path):
         pattern = re.search('archive/cf/([a-z0-9-]+)/*',path)
     else:
         print "No pattern was found for {}. Exiting..".format(path)
-        return None
+        raise Exception('No folder pattern found')
     return pattern.group(1)
 
 
 def lambda_handler(event, context):
     s3 = boto3.client('s3')
-    dynamodb = boto3.resource("dynamodb", region_name='us-east-1')
-    table = dynamodb.Table('BucketDetails')
+    dynamodb = boto3.resource("dynamodb", region_name=os.environ['DB_REGION'])
+    table = dynamodb.Table(os.environ['TABLE_NAME'])
     file_key = event['Records'][0]['s3']['object']['key']
     if file_key.endswith('/'): # folder creation
         print "No need to copy folders. Exiting"
@@ -35,7 +36,7 @@ def lambda_handler(event, context):
     copy_source = {'Bucket':source_bucket, 'Key':file_key}
     print "Copying {} from bucket {} to bucket {} ...".format(file_key, source_bucket, target_bucket)
     try:
-        s3.copy_object(Bucket=target_bucket, Key=file_key, CopySource=copy_source, ACL = 'bucket-owner-full-control')
+        s3.copy_object(Bucket=target_bucket, Key=file_key, CopySource=copy_source, ACL = os.environ['OBJECT_ACL'])
     except ClientError as e:
         print "Error copying file {} to {}. Error - {}".format(file_key, target_bucket,e.message)
         raise
