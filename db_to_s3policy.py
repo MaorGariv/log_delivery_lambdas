@@ -9,7 +9,7 @@ def lambda_handler(event, context):
         return
     target_bucket_arn = str(event['Records'][0]['dynamodb']['NewImage']['BucketArn']['S'])
     print target_bucket_arn
-    target_bucket_arn = target_bucket_arn + '/*'
+    target_bucket_arn += '/*'
     s3_copy_policy_arn = os.environ['POLICY_ARN']
     iam = boto3.client('iam')
     old_policy = iam.get_policy(PolicyArn = s3_copy_policy_arn)
